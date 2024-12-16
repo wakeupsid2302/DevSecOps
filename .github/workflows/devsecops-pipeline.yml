@@ -115,8 +115,8 @@ jobs:
       - name: Run Tests with Coverage
         run: |
           pip install pytest pytest-cov
-          pytest --cov=app --cov-report=xml:coverage.xml  # Adjust your module path
-
+          pytest --cov=app --cov-report=xml:coverage.xml
+          
       - name: Install Docker (latest version)
         run: |
           sudo apt-get update
