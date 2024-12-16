@@ -148,10 +148,11 @@ jobs:
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov-report/index.xml  # Coverage report
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov-report/index.xml
             -Dsonar.sources=src
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 
   validate_dockerfile:
     runs-on: ubuntu-latest
