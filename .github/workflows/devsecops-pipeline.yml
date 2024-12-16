@@ -133,10 +133,10 @@ jobs:
 
       - name: Install Docker Slim
         run: |
-          curl -sSL https://github.com/docker-slim/docker-slim/releases/download/1.38.0/dist_linux.tar.gz -o docker-slim.tar.gz
-          tar xzvf docker-slim.tar.gz
+          # Download the latest docker-slim release
+          curl -sSL https://github.com/docker-slim/docker-slim/releases/download/1.38.0/dist_linux_amd64 -o docker-slim
+          chmod +x docker-slim
           sudo mv docker-slim /usr/local/bin/
-
 
       - name: Scan Docker Image with Trivy
         run: |
