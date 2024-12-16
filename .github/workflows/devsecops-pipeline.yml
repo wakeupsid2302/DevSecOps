@@ -112,10 +112,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Tests with Coverage
+      - name: Print current directory and files
         run: |
-          pip install pytest pytest-cov
-          pytest --cov=app --cov-report=xml:coverage.xml --maxfail=1 -v
+          pwd
+          ls -R
+
+      - name: Run Tests
+        run: |
+          pytest app/test.py --cov=app --cov-report=xml:coverage.xml --maxfail=1 -v
+
 
       - name: Install Docker (latest version)
         run: |
