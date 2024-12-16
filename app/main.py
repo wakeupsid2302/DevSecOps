@@ -1,52 +1,49 @@
-# app/main.py
-
 import os
 import random
 import time
 
-# Global variables (bad practice)
-user_data = {}
-config = {
-    "api_key": "default_key",
-    "retry_count": 3,
-    "timeout": 5
-}
+# Global constants for better practice
+USER_DATA = {}
 
-# Function 1: Fetch data with retries
-def fetch_with_retries(i, retries=3):
-    data = fetch_data(i)
-    attempts = 1
-    while not data and attempts <= retries:
-        print(f"Retrying {i}... Attempt {attempts}")
-        data = fetch_data(i)
-        attempts += 1
-    return data
+class DataProcessor:
+    def __init__(self):
+        self.config = {
+            "api_key": "default_key",
+            "retry_count": 3,
+            "timeout": 5
+        }
 
-# Function 2: Process single data entry
-def process_data(data, i):
-    if data:
-        print(f"Processed {i}: {data}")
-        user_data[i] = data
-    else:
-        print(f"Failed to process {i}.")
+    def fetch_with_retries(self, i, retries=3):
+        data = self.fetch_data(i)
+        attempts = 1
+        while not data and attempts <= retries:
+            print(f"Retrying {i}... Attempt {attempts}")
+            data = self.fetch_data(i)
+            attempts += 1
+        return data
 
-# Function 3: Process all data entries
-def process_all_data():
-    for i in range(10):
-        data = fetch_with_retries(i)
-        process_data(data, i)
-    return user_data
+    def process_data(self, data, i):
+        if data:
+            print(f"Processed {i}: {data}")
+            USER_DATA[i] = data
+        else:
+            print(f"Failed to process {i}.")
 
-# Function 4: Fetch data with a random failure rate
-def fetch_data(i):
-    # Simulating a random failure
-    if random.random() < 0.2:  # 20% failure rate
-        return None
-    return f"data_{i}"
+    def process_all_data(self):
+        for i in range(10):
+            data = self.fetch_with_retries(i)
+            self.process_data(data, i)
+        return USER_DATA
 
-# Main execution (no entry point handling, no testing)
+    def fetch_data(self, i):
+        # Simulating a random failure with a 20% chance
+        if random.random() < 0.2:  # 20% failure rate
+            return None
+        return f"data_{i}"
+
 def main():
-    process_all_data()
+    processor = DataProcessor()
+    processor.process_all_data()
 
 if __name__ == "__main__":
     main()
