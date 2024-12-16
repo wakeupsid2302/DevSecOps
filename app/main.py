@@ -1,77 +1,50 @@
 import os
 import random
 import time
-import subprocess
-import requests
 
 # Global variables (bad practice)
-user_data = {}
-config = {
-    "api_key": "default_key",  # Hardcoded sensitive data
-    "retry_count": 3,  # Magic number
-    "timeout": 5  # Magic number
-}
+USER_DATA = {}  # Defined USER_DATA dictionary
 
-def fetch_with_retries(i, retries=3):
-    data = fetch_data(i)
-    attempts = 1
-    while not data and attempts <= retries:
-        print(f"Retrying {i}... Attempt {attempts}")
-        data = fetch_data(i)
-        attempts += 1
-    if attempts == retries:
-        return None  # No valid data found after retries
-    return data
+class DataProcessor:
+    def __init__(self):
+        self.user_data = {}
 
-def fetch_data(i):
-    # Vulnerable to network issues, doesn't handle exceptions like timeouts or connection errors
-    if random.random() < 0.2:
-        return None
-    return f"data_{i}"
+    # Function 1: Fetch data with retries
+    def fetch_with_retries(self, i, retries=3):
+        data = self.fetch_data(i)
+        attempts = 1
+        while not data and attempts <= retries:
+            print(f"Retrying {i}... Attempt {attempts}")
+            data = self.fetch_data(i)
+            attempts += 1
+        return data
 
-def process_data(data, i):
-    if data:
-        print(f"Processed {i}: {data}")
-        user_data[i] = data
-    else:
-        print(f"Failed to process {i}.")
+    # Function 2: Process single data entry
+    def process_data(self, data, i):
+        if data:
+            print(f"Processed {i}: {data}")
+            self.user_data[i] = data
+        else:
+            print(f"Failed to process {i}.")
 
-def process_all_data():
-    for i in range(10):
-        data = fetch_with_retries(i)
-        process_data(data, i)
-    return user_data
+    # Function 3: Process all data entries
+    def process_all_data(self):
+        for i in range(10):
+            data = self.fetch_with_retries(i)
+            self.process_data(data, i)
+        return self.user_data
 
-def risky_api_call(endpoint):
-    # Vulnerable to injection attacks, no input validation or sanitization
-    url = f"http://example.com/{endpoint}"
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(f"Error: {response.status_code}")
-    return response.text
-
-def unoptimized_loop():
-    # Inefficient code, looping through a large dataset without proper optimization
-    data = []
-    for i in range(1000000):
-        data.append(fetch_data(i))
-    return data
-
-def insecure_subprocess():
-    # Vulnerable to command injection, directly passing user input to shell command
-    subprocess.call(f"echo {os.environ['USER_INPUT']}")
-
-def hardcoded_password():
-    password = "mysecurepassword"  # Hardcoded sensitive data
-    return password
-
-def unhandled_exception():
-    # This could lead to crashes if an exception occurs
-    x = 1 / 0
+    # Function 4: Fetch data with a random failure rate
+    def fetch_data(self, i):
+        # Simulating a random failure
+        if random.random() < 0.2:  # 20% failure rate
+            return None
+        return f"data_{i}"
 
 # Main execution (no entry point handling, no testing)
 def main():
-    process_all_data()
+    processor = DataProcessor()
+    processor.process_all_data()
 
 if __name__ == "__main__":
     main()
