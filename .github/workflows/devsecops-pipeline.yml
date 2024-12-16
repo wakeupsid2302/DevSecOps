@@ -149,7 +149,9 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov-report/index.xml
-            -Dsonar.sources=app  # Change this to your actual source folder
+            -Dsonar.sources=app
+            -X  # Add this for debug logs
+
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
