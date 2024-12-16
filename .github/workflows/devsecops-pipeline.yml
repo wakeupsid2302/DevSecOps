@@ -119,8 +119,8 @@ jobs:
 
       - name: Run Tests
         run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/app
           pytest app/test.py --cov=app --cov-report=xml:coverage.xml --maxfail=1 -v
-
 
       - name: Install Docker (latest version)
         run: |
