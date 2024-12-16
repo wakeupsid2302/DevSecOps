@@ -133,6 +133,10 @@ jobs:
       - name: Push Docker Image to Docker Hub
         run: docker push sidwar/devsecops-demo:${{ github.sha }}
 
+  sonar_scan:
+    runs-on: ubuntu-latest
+    needs: devsecops-demo
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -152,8 +156,6 @@ jobs:
             -X  # Add this for debug logs
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-
 
 
   validate_dockerfile:
