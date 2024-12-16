@@ -1,2 +1,5 @@
 flask==2.2.5
 requests==2.31.0
+pytest
+pytest-cov
+
