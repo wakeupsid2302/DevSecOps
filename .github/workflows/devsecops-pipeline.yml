@@ -126,7 +126,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t devsecops-demo:latest .
-      
+
       # Step 6: Start Docker Daemon
       - name: Start Docker Daemon
         run: |
@@ -148,7 +148,8 @@ jobs:
 
       # Step 9: Scan Docker Image with Trivy
       - name: Scan Docker Image with Trivy
-        run: docker run --rm aquasec/trivy --docker devsecops-demo:latest
+        run: |
+          docker run --rm aquasec/trivy image devsecops-demo:latest
 
       # Step 10: Optimize Docker Image with Docker Slim
       - name: Optimize Docker Image
@@ -174,4 +175,3 @@ jobs:
         run: |
           echo "$COSIGN_KEY" > cosign.key
           cosign verify --key cosign.key <your-docker-repo>/devsecops-demo:latest
-
