@@ -212,6 +212,12 @@ jobs:
       - name: Debug
         run: docker images
         
+      - name: Install Docker (latest version)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          docker --version
+        
       - name: Set Docker API Version
         run: export DOCKER_API_VERSION='1.25'
 
