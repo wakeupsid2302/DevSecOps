@@ -1,61 +1,52 @@
+# app/main.py
+
 import os
 import random
+import time
 
-# Configuration (use environment variables for sensitive data)
+# Global variables (bad practice)
+user_data = {}
 config = {
-    "api_key": os.getenv("API_KEY", "default_key"),  # Using env variable for secrets
+    "api_key": "default_key",
     "retry_count": 3,
     "timeout": 5
 }
 
-# Function to simulate fetching data (with error handling)
-def fetch_data(i):
-    """Simulate data fetching with a random failure."""
-    try:
-        if random.random() < 0.2:  # 20% failure rate
-            raise Exception(f"Failed to fetch data for {i}")
-        return f"data_{i}"
-    except Exception as e:
-        print(e)
-        return None
-
-# Refactored function for handling retries
-def fetch_with_retries(i, retries):
-    """Attempt to fetch data with retries."""
-    attempts = 0
-    while attempts < retries:
+# Function 1: Fetch data with retries
+def fetch_with_retries(i, retries=3):
+    data = fetch_data(i)
+    attempts = 1
+    while not data and attempts <= retries:
+        print(f"Retrying {i}... Attempt {attempts}")
         data = fetch_data(i)
-        if data:
-            return data
         attempts += 1
-        print(f"Retrying {i}, attempt {attempts}...")
-    return None
+    return data
 
-# Function for processing data (separated concerns)
+# Function 2: Process single data entry
 def process_data(data, i):
-    """Process the data fetched for each item."""
     if data:
-        print(f"Processing data for {i}: {data}")
-    else:
-        print(f"Could not process data for {i}")
-
-# Main logic for processing data (modularized)
-def process_all_data():
-    """Process data with retries."""
-    user_data = {}
-    retries = config["retry_count"]
-    for i in range(10):
-        data = fetch_with_retries(i, retries)
+        print(f"Processed {i}: {data}")
         user_data[i] = data
+    else:
+        print(f"Failed to process {i}.")
+
+# Function 3: Process all data entries
+def process_all_data():
+    for i in range(10):
+        data = fetch_with_retries(i)
         process_data(data, i)
     return user_data
 
-# Main function to run the program
+# Function 4: Fetch data with a random failure rate
+def fetch_data(i):
+    # Simulating a random failure
+    if random.random() < 0.2:  # 20% failure rate
+        return None
+    return f"data_{i}"
+
+# Main execution (no entry point handling, no testing)
 def main():
-    print("Starting data processing...")
-    user_data = process_all_data()
-    print("Data processing completed.")
-    return user_data
+    process_all_data()
 
 if __name__ == "__main__":
     main()
