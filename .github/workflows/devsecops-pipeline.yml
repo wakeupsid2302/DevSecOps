@@ -214,6 +214,9 @@ jobs:
       - name: Debug
         run: docker images
 
+      - name: Install Docker (latest version)
+        run: |
+          docker --version
 
       - name: Optimize Docker image
         run: |
