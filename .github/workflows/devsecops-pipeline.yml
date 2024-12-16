@@ -91,7 +91,7 @@ on:
       - main
   pull_request:
     branches:
-      - '**'
+      - main
   workflow_dispatch:
 
 jobs:
@@ -122,30 +122,73 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker Image
-        run: docker build -t sidwar/devsecops-demo:latest .
+        run: docker build -t sidwar/devsecops-demo:${{ github.sha }} .
 
+      - name: Push Docker Image to Docker Hub
+        run: docker push sidwar/devsecops-demo:${{ github.sha }}
+
+  sonar_scan:
+    runs-on: ubuntu-latest
+    needs: devsecops-demo
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up SonarQube Scanner
+        uses: sonarsource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.host.url=https://sonarcloud.io
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  install_opa:
+    runs-on: ubuntu-latest
+    needs: sonar_scan
+
+    steps:
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
           chmod +x opa
           sudo mv opa /usr/local/bin/
 
-      - name: Validate Dockerfile with OPA
+  validate_dockerfile:
+    runs-on: ubuntu-latest
+    needs: install_opa
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Validate Dockerfile with OPA (Best Practices)
         run: |
           opa eval --input Dockerfile --data policy/ --format pretty \
             "data.docker.policy.deny" > policy-evaluation.txt
+          cat policy-evaluation.txt
+
+  vulnerability_scan:
+    runs-on: ubuntu-latest
+    needs: validate_dockerfile
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Scan Docker Image with Trivy
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $(pwd)/trivy-cache:/root/.cache/ \
-            aquasec/trivy image --scanners vuln sidwar/devsecops-demo:latest
+            aquasec/trivy image --scanners vuln sidwar/devsecops-demo:${{ github.sha }}
 
   optimize_image:
     name: Optimize Docker Image
     runs-on: ubuntu-latest
-    needs: devsecops-demo
+    needs: vulnerability_scan
 
     steps:
       - name: Checkout code
@@ -162,7 +205,7 @@ jobs:
       - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Tag and Push Docker image
+      - name: Tag and Push Optimized Docker image
         run: |
           docker tag sidwar/devsecops-demo.slim:latest sidwar/devsecops-demo:slim-${{ github.sha }}
           docker push sidwar/devsecops-demo:slim-${{ github.sha }}
@@ -173,31 +216,27 @@ jobs:
     needs: optimize_image
 
     steps:
-      - name: Sign Docker Image
-        env:
-          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+      - name: Log in to Cosign
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign sign --key cosign.key sidwar/devsecops-demo-optimized:latest
+          cosign sign --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
 
-  push_to_registry:
-    name: Push Docker Image to Registry
+  push_image:
+    name: Push Docker Image
     runs-on: ubuntu-latest
     needs: sign_image
-    steps:
-      - name: Push Docker Image
-        run: |
-          docker tag sidwar/devsecops-demo-optimized:latest sidwar/devsecops-demo:latest
-          docker push sidwar/devsecops-demo:latest
 
-  verify_signed_image:
-    name: Verify Signed Docker Image
+    steps:
+      - name: Push Signed Docker Image
+        run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
+
+  verify_image:
+    name: Verify Docker Image
     runs-on: ubuntu-latest
-    needs: push_to_registry
+    needs: push_image
+
     steps:
       - name: Verify Signed Docker Image
-        env:
-          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign verify --key cosign.key sidwar/devsecops-demo:latest
+          cosign verify --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
