@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Switch to non-root user
-USER appuser
+USER root
 
 # Copy application files
 COPY app/ .
