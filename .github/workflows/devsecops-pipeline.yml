@@ -120,6 +120,12 @@ jobs:
       - name: Build Docker Image
         run: docker build -t sidwar/devsecops-demo:latest .
 
+      - name: Install OPA
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
+          chmod +x opa
+          sudo mv opa /usr/local/bin/
+
       - name: Validate Dockerfile with OPA
         run: |
           opa eval --input Dockerfile --data policy/ --format pretty \
