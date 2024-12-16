@@ -37,9 +37,12 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # Step 5: Build Docker Image
-      - name: Build Docker Image
-        run: docker build -t devsecops-demo:latest .
+      # Step 5: Install OPA (Open Policy Agent)
+      - name: Install Open Policy Agent
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/v0.47.5/opa_linux_amd64
+          chmod +x opa
+          sudo mv opa /usr/local/bin/
 
       # Step 6: Validate Dockerfile with OPA (Best Practices)
       - name: Validate Dockerfile
@@ -47,31 +50,49 @@ jobs:
           opa eval --input Dockerfile --data policy/ --format pretty \
             --output policy-evaluation.txt "data.docker.policy.deny"
 
-      # Step 7: Scan Docker Image with Trivy (Vulnerability Scan)
+      # Step 7: Build Docker Image
+      - name: Build Docker Image
+        run: docker build -t devsecops-demo:latest .
+
+      # Step 8: Scan Docker Image with Trivy (Vulnerability Scan)
       - name: Scan Docker Image with Trivy
         run: docker run --rm aquasec/trivy image devsecops-demo:latest
 
-      # Step 8: Optimize Docker Image with Docker Slim
+      # Step 9: Optimize Docker Image with Docker Slim
       - name: Optimize Docker Image
         run: docker-slim build --tag devsecops-demo-optimized:latest devsecops-demo:latest
 
-      # Step 9: Sign Optimized Docker Image with Cosign
+      # Step 10: Install Cosign (for Image Signing)
+      - name: Install Cosign
+        run: |
+          curl -L -o cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
+          chmod +x cosign
+          sudo mv cosign /usr/local/bin/
+
+      # Step 11: Sign Optimized Docker Image with Cosign
       - name: Sign Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
         run: |
           echo "$COSIGN_KEY" > cosign.key
           cosign sign --key cosign.key devsecops-demo-optimized:latest
+          rm -f cosign.key  # Remove key file for security
 
-      # Step 10: Push Signed Docker Image to Container Registry
+      # Step 12: Push Signed Docker Image to Container Registry
       - name: Push Docker Image
-        run: docker tag devsecops-demo-optimized:latest <your-docker-repo>/devsecops-demo:latest && \
-             docker push <your-docker-repo>/devsecops-demo:latest
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker tag devsecops-demo-optimized:latest ${{ secrets.DOCKER_REPO }}/devsecops-demo:latest
+          docker push ${{ secrets.DOCKER_REPO }}/devsecops-demo:latest
 
-      # Step 11: Verify Signed Docker Image (Final Validation)
+      # Step 13: Verify Signed Docker Image (Final Validation)
       - name: Verify Signed Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign verify --key cosign.key <your-docker-repo>/devsecops-demo:latest
+          cosign verify --key cosign.key ${{ secrets.DOCKER_REPO }}/devsecops-demo:latest
+          rm -f cosign.key  # Remove key file for security
