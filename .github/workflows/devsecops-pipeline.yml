@@ -1,3 +1,88 @@
+# name: DevSecOps Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   devsecops-demo:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       # Step 1: Checkout Code
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       # Step 2: Set Up Python
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.8
+
+#       # Step 3: Install Dependencies
+#       - name: Install Dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt
+
+#       # Step 4: Run SonarCloud Analysis (Code Quality + SAST)
+#       - name: SonarCloud Scan
+#         uses: sonarsource/sonarcloud-github-action@v2
+#         with:
+#           args: >
+#             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+#             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+#             -Dsonar.host.url=https://sonarcloud.io
+#         env:
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+#       # Step 5: Build Docker Image
+#       - name: Build Docker Image
+#         run: docker build -t devsecops-demo:latest .
+
+#       # Step 6: Install OPA
+#       - name: Install OPA
+#         run: |
+#           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
+#           chmod +x opa
+#           sudo mv opa /usr/local/bin/
+
+#       # Step 7: Validate Dockerfile with OPA (Best Practices)
+#       - name: Validate Dockerfile
+#         run: |
+#           opa eval --input Dockerfile --data policy/ --format pretty \
+#             "data.docker.policy.deny" > policy-evaluation.txt
+
+#       # Step 8: Scan Docker Image with Trivy (Vulnerability Scan)
+#       - name: Scan Docker Image with Trivy
+#         run: docker run --rm aquasec/trivy image devsecops-demo:latest
+
+#       # Step 9: Optimize Docker Image with Docker Slim
+#       - name: Optimize Docker Image
+#         run: docker-slim build --tag devsecops-demo-optimized:latest devsecops-demo:latest
+
+#       # Step 10: Sign Optimized Docker Image with Cosign
+#       - name: Sign Docker Image
+#         env:
+#           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+#         run: |
+#           echo "$COSIGN_KEY" > cosign.key
+#           cosign sign --key cosign.key devsecops-demo-optimized:latest
+
+#       # Step 11: Push Signed Docker Image to Container Registry
+#       - name: Push Docker Image
+#         run: docker tag devsecops-demo-optimized:latest <your-docker-repo>/devsecops-demo:latest && \
+#              docker push <your-docker-repo>/devsecops-demo:latest
+
+#       # Step 12: Verify Signed Docker Image (Final Validation)
+#       - name: Verify Signed Docker Image
+#         env:
+#           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+#         run: |
+#           echo "$COSIGN_KEY" > cosign.key
+#           cosign verify --key cosign.key <your-docker-repo>/devsecops-demo:latest
+
 name: DevSecOps Pipeline
 
 on:
@@ -39,30 +124,37 @@ jobs:
 
       # Step 5: Build Docker Image
       - name: Build Docker Image
-        run: docker build -t devsecops-demo:latest .
+        run: |
+          docker build -t devsecops-demo:latest .
+      
+      # Step 6: Start Docker Daemon
+      - name: Start Docker Daemon
+        run: |
+          sudo service docker start
+          sudo systemctl enable docker
 
-      # Step 6: Install OPA
+      # Step 7: Install OPA
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
           chmod +x opa
           sudo mv opa /usr/local/bin/
 
-      # Step 7: Validate Dockerfile with OPA (Best Practices)
+      # Step 8: Validate Dockerfile with OPA (Best Practices)
       - name: Validate Dockerfile
         run: |
           opa eval --input Dockerfile --data policy/ --format pretty \
             "data.docker.policy.deny" > policy-evaluation.txt
 
-      # Step 8: Scan Docker Image with Trivy (Vulnerability Scan)
+      # Step 9: Scan Docker Image with Trivy
       - name: Scan Docker Image with Trivy
-        run: docker run --rm aquasec/trivy image devsecops-demo:latest
+        run: docker run --rm aquasec/trivy --docker devsecops-demo:latest
 
-      # Step 9: Optimize Docker Image with Docker Slim
+      # Step 10: Optimize Docker Image with Docker Slim
       - name: Optimize Docker Image
         run: docker-slim build --tag devsecops-demo-optimized:latest devsecops-demo:latest
 
-      # Step 10: Sign Optimized Docker Image with Cosign
+      # Step 11: Sign Optimized Docker Image with Cosign
       - name: Sign Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
@@ -70,15 +162,16 @@ jobs:
           echo "$COSIGN_KEY" > cosign.key
           cosign sign --key cosign.key devsecops-demo-optimized:latest
 
-      # Step 11: Push Signed Docker Image to Container Registry
+      # Step 12: Push Signed Docker Image to Container Registry
       - name: Push Docker Image
         run: docker tag devsecops-demo-optimized:latest <your-docker-repo>/devsecops-demo:latest && \
              docker push <your-docker-repo>/devsecops-demo:latest
 
-      # Step 12: Verify Signed Docker Image (Final Validation)
+      # Step 13: Verify Signed Docker Image (Final Validation)
       - name: Verify Signed Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
         run: |
           echo "$COSIGN_KEY" > cosign.key
           cosign verify --key cosign.key <your-docker-repo>/devsecops-demo:latest
+
