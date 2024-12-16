@@ -41,29 +41,21 @@ jobs:
       - name: Build Docker Image
         run: docker build -t devsecops-demo:latest .
 
-      # Step 6: Install OPA (Open Policy Agent)
-      - name: Install Open Policy Agent
-        run: |
-          curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
-          chmod +x opa
-          sudo mv opa /usr/local/bin/
-          opa version  # Verify the installation
-
-      # Step 7: Validate Dockerfile with OPA (Best Practices)
+      # Step 6: Validate Dockerfile with OPA (Best Practices)
       - name: Validate Dockerfile
         run: |
           opa eval --input Dockerfile --data policy/ --format pretty \
-            --output policy-evaluation.txt "data.docker.policy.deny"
+            "data.docker.policy.deny" > policy-evaluation.txt
 
-      # Step 8: Scan Docker Image with Trivy (Vulnerability Scan)
+      # Step 7: Scan Docker Image with Trivy (Vulnerability Scan)
       - name: Scan Docker Image with Trivy
         run: docker run --rm aquasec/trivy image devsecops-demo:latest
 
-      # Step 9: Optimize Docker Image with Docker Slim
+      # Step 8: Optimize Docker Image with Docker Slim
       - name: Optimize Docker Image
         run: docker-slim build --tag devsecops-demo-optimized:latest devsecops-demo:latest
 
-      # Step 10: Sign Optimized Docker Image with Cosign
+      # Step 9: Sign Optimized Docker Image with Cosign
       - name: Sign Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
@@ -71,12 +63,12 @@ jobs:
           echo "$COSIGN_KEY" > cosign.key
           cosign sign --key cosign.key devsecops-demo-optimized:latest
 
-      # Step 11: Push Signed Docker Image to Container Registry
+      # Step 10: Push Signed Docker Image to Container Registry
       - name: Push Docker Image
         run: docker tag devsecops-demo-optimized:latest <your-docker-repo>/devsecops-demo:latest && \
              docker push <your-docker-repo>/devsecops-demo:latest
 
-      # Step 12: Verify Signed Docker Image (Final Validation)
+      # Step 11: Verify Signed Docker Image (Final Validation)
       - name: Verify Signed Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
