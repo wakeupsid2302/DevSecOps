@@ -148,18 +148,19 @@ jobs:
   validate_dockerfile:
     runs-on: ubuntu-latest
     needs: sonar_scan
-      # Step 6: Install OPA
+
+    steps:
       - name: Install OPA
         run: |
           curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64
           chmod +x opa
           sudo mv opa /usr/local/bin/
 
-      # Step 7: Validate Dockerfile with OPA (Best Practices)
-      - name: Validate Dockerfile
+      - name: Validate Dockerfile with OPA (Best Practices)
         run: |
           opa eval --input Dockerfile --data policy/ --format pretty \
             "data.docker.policy.deny" > policy-evaluation.txt
+          cat policy-evaluation.txt
 
   vulnerability_scan:
     runs-on: ubuntu-latest
