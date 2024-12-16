@@ -131,6 +131,11 @@ jobs:
           opa eval --input Dockerfile --data policy/ --format pretty \
             "data.docker.policy.deny" > policy-evaluation.txt
 
+      - name: Install Docker Slim
+        run: |
+          curl -sSL https://github.com/docker-slim/docker-slim/releases/download/1.38.0/dist_linux.tar.gz | tar xz -C /tmp
+          sudo mv /tmp/docker-slim /usr/local/bin/
+
       - name: Scan Docker Image with Trivy
         run: |
           docker run --rm \
