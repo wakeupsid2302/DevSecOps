@@ -198,11 +198,11 @@ jobs:
       - name: Pull Docker Image
         run: docker pull sidwar/devsecops-demo:${{ github.sha }}
 
-      - name: Optimize Docker Image with Docker Slim
-        uses: docker-slim/docker-slim-action@v5
+      - name: Slim the Docker Image
+        uses: kitabisa/docker-slim-action@v1
         with:
           target: sidwar/devsecops-demo:${{ github.sha }}
-          tag: sidwar/devsecops-demo:slim-${{ github.sha }}
+          tag: slim
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -211,7 +211,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push Slimmed Docker Image
-        run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
+        run: docker push sidwar/devsecops-demo:slim
 
   sign_image:
     name: Sign Docker Image
@@ -222,7 +222,7 @@ jobs:
       - name: Log in to Cosign
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign sign --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
+          cosign sign --key cosign.key sidwar/devsecops-demo:slim
 
   verify_image:
     name: Verify Docker Image
@@ -233,4 +233,4 @@ jobs:
       - name: Verify Signed Docker Image
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign verify --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
+          cosign verify --key cosign.key sidwar/devsecops-demo:slim
