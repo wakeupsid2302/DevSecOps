@@ -1,50 +1,19 @@
-import os
-import random
-import time
-
-# Global variables (bad practice)
-USER_DATA = {}  # Defined USER_DATA dictionary
+# app/main.py
 
 class DataProcessor:
-    def __init__(self):
-        self.user_data = {}
+    def __init__(self, data):
+        self.data = data
 
-    # Function 1: Fetch data with retries
-    def fetch_with_retries(self, i, retries=3):
-        data = self.fetch_data(i)
-        attempts = 1
-        while not data and attempts <= retries:
-            print(f"Retrying {i}... Attempt {attempts}")
-            data = self.fetch_data(i)
-            attempts += 1
-        return data
+    def process_data(self):
+        if not self.data:
+            return "No data to process"
+        return [item * 2 for item in self.data]
 
-    # Function 2: Process single data entry
-    def process_data(self, data, i):
-        if data:
-            print(f"Processed {i}: {data}")
-            self.user_data[i] = data
-        else:
-            print(f"Failed to process {i}.")
+USER_DATA = [1, 2, 3]
 
-    # Function 3: Process all data entries
-    def process_all_data(self):
-        for i in range(10):
-            data = self.fetch_with_retries(i)
-            self.process_data(data, i)
-        return self.user_data
-
-    # Function 4: Fetch data with a random failure rate
-    def fetch_data(self, i):
-        # Simulating a random failure
-        if random.random() < 0.2:  # 20% failure rate
-            return None
-        return f"data_{i}"
-
-# Main execution (no entry point handling, no testing)
-def main():
-    processor = DataProcessor()
-    processor.process_all_data()
+def get_data_processor():
+    return DataProcessor(USER_DATA)
 
 if __name__ == "__main__":
-    main()
+    processor = get_data_processor()
+    print(processor.process_data())
