@@ -112,6 +112,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Docker (latest version)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          docker --version
+
       - name: Start Docker Service
         run: sudo service docker start
 
