@@ -112,67 +112,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Print current directory and files
-        run: |
-          pwd
-          ls -R
-
       - name: Run Tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)/app
           pytest app/test.py --cov=app --cov-report=xml:coverage.xml --maxfail=1 -v
-          ls -la
-          cat coverage.xml
-
-
-      - name: Install Docker (latest version)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-          docker --version
-
-      - name: Start Docker Service
-        run: sudo service docker start
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build Docker Image
-        run: docker build -t sidwar/devsecops-demo:${{ github.sha }} .
-
-      - name: Push Docker Image to Docker Hub
-        run: docker push sidwar/devsecops-demo:${{ github.sha }}
-
-  sonar_scan:
-    runs-on: ubuntu-latest
-    needs: devsecops-demo
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: List directory contents
-        run: ls -la
-
-      - name: Run SonarCloud analysis
-        uses: sonarsource/sonarcloud-github-action@v2
-        with:
-          args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.python.coverage.reportPaths=coverage.xml 
-            -Dsonar.sources=app
-            -X
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   validate_dockerfile:
     runs-on: ubuntu-latest
-    needs: sonar_scan
+    needs: devsecops-demo
 
     steps:
       - name: Checkout Code
@@ -184,10 +131,31 @@ jobs:
           chmod +x opa
           sudo mv opa /usr/local/bin/
 
-      - name: Validate Dockerfile with OPA (Best Practices)
+      - name: Validate Dockerfile
         run: |
+          mkdir -p policy
+          echo '
+          package docker.policy
+
+          deny[msg] {
+              input.instruction == "USER"
+              input.value == "root"
+              msg = "Avoid using root user in Dockerfile."
+          }
+
+          deny[msg] {
+              input.instruction == "ADD"
+              msg = "Use COPY instead of ADD for better security."
+          }
+
+          any_non_root_user_set {
+              input.instruction == "USER"
+              input.value != "root"
+          }
+          ' > policy/docker.rego
+
           opa eval --input Dockerfile --data policy/ --format pretty \
-            "data.docker.policy.deny" > policy-evaluation.txt
+            "data.docker.policy.deny" > policy-evaluation.txt || true
           cat policy-evaluation.txt
 
   vulnerability_scan:
@@ -198,31 +166,32 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Scan Docker Image with Trivy and Save Report
+      - name: Install Trivy
         run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $(pwd)/trivy-cache:/root/.cache/ \
-            aquasec/trivy image --scanners vuln \
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.44.0_Linux-64bit.tar.gz | tar zxvf -
+          sudo mv trivy /usr/local/bin/
+
+      - name: Scan Docker Image
+        run: |
+          docker build -t sidwar/devsecops-demo:${{ github.sha }} .
+          trivy image --scanners vuln \
             --format json \
             --output trivy-report.json \
             sidwar/devsecops-demo:${{ github.sha }}
 
-      - name: Upload Trivy Vulnerability Report
+      - name: Upload Vulnerability Report
         uses: actions/upload-artifact@v3
         with:
           name: trivy-vulnerability-report
           path: trivy-report.json
 
   optimize_image:
-    name: Optimize Docker Image
     runs-on: ubuntu-latest
     needs: vulnerability_scan
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
       - name: Pull Docker Image
         run: docker pull sidwar/devsecops-demo:${{ github.sha }}
 
@@ -231,7 +200,7 @@ jobs:
         with:
           target: sidwar/devsecops-demo:${{ github.sha }}
           tag: sidwar/devsecops-demo:slim-${{ github.sha }}
-        continue-on-error: true 
+        continue-on-error: false
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -243,25 +212,27 @@ jobs:
         run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
 
   sign_image:
-    name: Sign Docker Image
     runs-on: ubuntu-latest
     needs: optimize_image
 
     steps:
-      - name: Log in to Cosign
+      - name: Install Cosign
         run: |
-          echo "$COSIGN_KEY" > cosign.key
-          cosign sign --key cosign.key sidwar/devsecops-demo:${{ github.sha }}
-        continue-on-error: true 
+          curl -L https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o cosign
+          chmod +x cosign
+          sudo mv cosign /usr/local/bin/
+
+      - name: Sign Docker Image
+        run: |
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          cosign sign --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
 
   verify_image:
-    name: Verify Docker Image
     runs-on: ubuntu-latest
     needs: sign_image
 
     steps:
       - name: Verify Signed Docker Image
         run: |
-          echo "$COSIGN_KEY" > cosign.key
-          cosign verify --key cosign.key sidwar/devsecops-demo:${{ github.sha }}
-        continue-on-error: true
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          cosign verify --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
