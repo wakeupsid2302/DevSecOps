@@ -1,84 +1,61 @@
-# app/main.py
-
 import os
 import random
-import time
 
-# Global variables (bad practice)
-user_data = {}
+# Configuration (use environment variables for sensitive data)
 config = {
-    "api_key": "default_key",
+    "api_key": os.getenv("API_KEY", "default_key"),  # Using env variable for secrets
     "retry_count": 3,
     "timeout": 5
 }
 
-# Function 1: Poorly named function, unclear purpose
-def f1():
-    global user_data
-    for i in range(10):  # Duplicated logic
-        data = fetch_data(i)
-        user_data[i] = data
-        time.sleep(1)  # Simulating delay without reason
-
-# Function 2: Long function, too many responsibilities
-def f2():
-    global user_data
-    api_key = os.getenv("SECRET_API_KEY", "default_secret")  # Hardcoded secret
-    retry_count = config["retry_count"]
-    
-    for i in range(10):
-        data = fetch_data(i)  # Duplicate data fetching logic
-        if not data:
-            if retry_count > 0:
-                print(f"Retrying to fetch data for {i}... {retry_count} retries left.")
-                retry_count -= 1
-                data = fetch_data(i)
-            else:
-                print(f"Failed to fetch data for {i}. Moving to next.")
-        user_data[i] = data
-        time.sleep(1)  # Unnecessary delay
-
-# Function 3: Another long function with similar logic
-def f3():
-    global user_data
-    api_key = os.getenv("SECRET_API_KEY", "default_secret")  # Hardcoded secret
-    retry_count = config["retry_count"]
-    
-    for i in range(10):
-        data = fetch_data(i)  # Duplicated logic
-        if data:
-            user_data[i] = data
-        else:
-            print(f"Error fetching data for {i}.")
-        time.sleep(1)  # Unnecessary delay
-
-# Function 4: Fetching data with no error handling or validation
+# Function to simulate fetching data (with error handling)
 def fetch_data(i):
-    # Simulating a random failure
-    if random.random() < 0.2:  # 20% failure rate
-        print(f"Failed to fetch data for {i}")
+    """Simulate data fetching with a random failure."""
+    try:
+        if random.random() < 0.2:  # 20% failure rate
+            raise Exception(f"Failed to fetch data for {i}")
+        return f"data_{i}"
+    except Exception as e:
+        print(e)
         return None
-    return f"data_{i}"
 
-# Function 5: Mixing concerns
-def f4():
-    print("Starting process...")
-    for i in range(10):
-        print(f"Processing {i}...")
+# Refactored function for handling retries
+def fetch_with_retries(i, retries):
+    """Attempt to fetch data with retries."""
+    attempts = 0
+    while attempts < retries:
         data = fetch_data(i)
         if data:
-            print(f"Data for {i}: {data}")
-        else:
-            print(f"Could not process {i}")
-        time.sleep(1)  # Unnecessary delay
+            return data
+        attempts += 1
+        print(f"Retrying {i}, attempt {attempts}...")
+    return None
 
-# Main execution (no entry point handling, no testing)
+# Function for processing data (separated concerns)
+def process_data(data, i):
+    """Process the data fetched for each item."""
+    if data:
+        print(f"Processing data for {i}: {data}")
+    else:
+        print(f"Could not process data for {i}")
+
+# Main logic for processing data (modularized)
+def process_all_data():
+    """Process data with retries."""
+    user_data = {}
+    retries = config["retry_count"]
+    for i in range(10):
+        data = fetch_with_retries(i, retries)
+        user_data[i] = data
+        process_data(data, i)
+    return user_data
+
+# Main function to run the program
 def main():
-    f1()
-    f2()
-    f3()
-    f4()
+    print("Starting data processing...")
+    user_data = process_all_data()
+    print("Data processing completed.")
+    return user_data
 
 if __name__ == "__main__":
     main()
-
