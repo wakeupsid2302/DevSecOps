@@ -147,22 +147,30 @@ jobs:
 
       - name: Optimize Docker Image
         run: |
-          docker-slim build --tag sidwar/devsecops-demo-optimized:latest sidwar/devsecops-demo:latest
+          docker pull sidwar/devsecops-demo:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock dslim/docker-slim build --http-probe=false sidwar/devsecops-demo:latest
+
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Tag and Push Optimized Docker Image
+        run: |
+          docker tag sidwar/devsecops-demo.slim:latest sidwar/devsecops-demo:slim-${{ github.sha }}
+          docker push sidwar/devsecops-demo:slim-${{ github.sha }}
 
       - name: Sign Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign sign --key cosign.key sidwar/devsecops-demo-optimized:latest
+          cosign sign --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
 
-      - name: Push Docker Image
-        run: docker tag sidwar/devsecops-demo-optimized:latest sidwar/devsecops-demo:latest && \
-             docker push sidwar/devsecops-demo:latest
+      - name: Push Signed Docker Image
+        run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
 
       - name: Verify Signed Docker Image
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
         run: |
           echo "$COSIGN_KEY" > cosign.key
-          cosign verify --key cosign.key sidwar/devsecops-demo:latest
+          cosign verify --key cosign.key sidwar/devsecops-demo:slim-${{ github.sha }}
