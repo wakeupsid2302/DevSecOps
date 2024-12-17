@@ -166,22 +166,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Trivy
+      - name: Scan Docker Image with Trivy and Save Report
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget
-          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.44.0_Linux-64bit.tar.gz | tar zxvf -
-          sudo mv trivy /usr/local/bin/
-
-      - name: Scan Docker Image
-        run: |
-          docker build -t sidwar/devsecops-demo:${{ github.sha }} .
-          trivy image --scanners vuln \
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $(pwd)/trivy-cache:/root/.cache/ \
+            aquasec/trivy image --scanners vuln \
             --format json \
             --output trivy-report.json \
             sidwar/devsecops-demo:${{ github.sha }}
 
-      - name: Upload Vulnerability Report
+      - name: Upload Trivy Vulnerability Report
         uses: actions/upload-artifact@v3
         with:
           name: trivy-vulnerability-report
