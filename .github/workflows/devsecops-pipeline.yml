@@ -91,6 +91,11 @@ jobs:
         run: |
           sed -i 's|/home/runner/work/DevSecOps/DevSecOps|.|g' coverage.xml
 
+      - name: Debug Coverage File Again
+        run: |
+          echo "Coverage report contents:"
+          cat coverage.xml || echo "Coverage file not found!"
+
       - name: Run SonarCloud Analysis
         uses: sonarsource/sonarcloud-github-action@v2
         with:
