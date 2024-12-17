@@ -249,10 +249,10 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $(pwd):/tmp \
             dslim/slim:latest \
-            build sidwar/devsecops-demo:${{ github.sha }} --output sidwar/devsecops-demo:slim-${{ github.sha }} --no-http-probe
+            build sidwar/devsecops-demo:${{ github.sha }} --output sidwar/devsecops-demo:slim-${{ github.sha }} --http-probe=false
+
       - name: Push Slimmed Docker Image
         run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
-
 
   sign_and_verify_image:
     runs-on: ubuntu-latest
