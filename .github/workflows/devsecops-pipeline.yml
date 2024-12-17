@@ -126,21 +126,42 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Scan Docker Image with Trivy and Save Report
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull Docker Image
+        run: docker pull sidwar/devsecops-demo:${{ github.sha }}
+
+      - name: Run Trivy Scan on Docker Image
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $(pwd)/trivy-cache:/root/.cache/ \
-            aquasec/trivy image --scanners vuln \
+            aquasec/trivy:latest image --scanners vuln \
             --format json \
             --output trivy-report.json \
             sidwar/devsecops-demo:${{ github.sha }}
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Check Trivy Report
+        run: |
+          if [ ! -f trivy-report.json ]; then
+            echo "Trivy report not generated. Debugging output:"
+            docker images
+            ls -la
+            exit 1
+          fi
 
       - name: Upload Trivy Vulnerability Report
         uses: actions/upload-artifact@v3
         with:
           name: trivy-vulnerability-report
           path: trivy-report.json
+
 
   optimize_image:
     runs-on: ubuntu-latest
