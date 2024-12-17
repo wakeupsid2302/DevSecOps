@@ -53,6 +53,40 @@ jobs:
       - name: Push Docker Image to Docker Hub
         run: docker push sidwar/devsecops-demo:${{ github.sha }}
 
+  check_for_secrets:
+    runs-on: ubuntu-latest
+    needs: devsecops-demo
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install GitLeaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Scan Codebase for Secrets
+        run: |
+          gitleaks detect --source . --report-path gitleaks-report.json --verbose || true
+        env:
+          GITLEAKS_REPO: ${{ github.repository }}
+
+      - name: Scan Docker Image for Secrets
+        run: |
+          docker run --rm --volume $(pwd):/path gitleaks/gitleaks:latest detect --source /path \
+            --report-path /path/gitleaks-docker-report.json || true
+
+      - name: Upload GitLeaks Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: gitleaks-secrets-reports
+          path: |
+            gitleaks-report.json
+            gitleaks-docker-report.json
+
+
   sonar_scan:
     runs-on: ubuntu-latest
     needs: devsecops-demo
