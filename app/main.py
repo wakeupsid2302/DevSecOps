@@ -6,7 +6,6 @@ class DataProcessor:
         if not self.data:
             return "No data to process"
         # Vulnerability: SQL Injection via unsanitized user input
-        # Example of SQL injection vulnerability
         query = f"SELECT * FROM data WHERE value = {self.data[0]}"  # Unsanitized user input used directly in SQL query
         return [item * 2 for item in self.data]
 
@@ -24,9 +23,8 @@ class DataProcessorDuplicate:
         if not self.data:
             return "No data to process"
         # Vulnerability: Cross-Site Scripting (XSS)
-        # Example of XSS vulnerability (injecting malicious script into a response)
-        malicious_content = f"<script>alert('XSS Attack');</script>{self.data[0]}"  # Injecting XSS payload
-        return [malicious_content for _ in self.data]
+        # Injecting XSS payload into the data items
+        return [f"<script>alert('XSS Attack');</script>{item}" for item in self.data]
 
 USER_DATA_DUPLICATE = [1, 2, 3]  # Corrected to integers
 
@@ -52,3 +50,4 @@ if __name__ == "__main__":
 # Exposed API key (as requested)
 api_key = "12345-ABCDE-SECRET-KEY"
 print(api_key)
+
