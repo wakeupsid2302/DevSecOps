@@ -231,6 +231,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: vulnerability_scan
     steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Pull Docker Image
         run: docker pull sidwar/devsecops-demo:${{ github.sha }}
 
@@ -244,13 +249,7 @@ jobs:
             --http-probe=false \
             --tag sidwar/devsecops-demo:slim-${{ github.sha }} \
             sidwar/devsecops-demo:${{ github.sha }}
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
+            
       - name: Push Slimmed Docker Image
         run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
 
