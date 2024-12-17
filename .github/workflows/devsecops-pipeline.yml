@@ -236,10 +236,10 @@ jobs:
 
       - name: Install Docker Slim
         run: |
-          curl -sL https://github.com/docker-slim/docker-slim/releases/download/1.39.0/docker-slim_1.39.0_linux.tar.gz -o docker-slim.tar.gz
+          curl -sL https://github.com/docker-slim/docker-slim/releases/download/1.20/dist_linux.tar.gz -o docker-slim.tar.gz
           tar -xzf docker-slim.tar.gz
-          sudo mv docker-slim /usr/local/bin/
-          rm -f docker-slim.tar.gz
+          sudo mv dist_linux/docker-slim /usr/local/bin/
+          rm -rf dist_linux docker-slim.tar.gz
 
       - name: Verify Docker Slim Installation
         run: docker-slim --version
@@ -256,6 +256,7 @@ jobs:
 
       - name: Push Slimmed Docker Image
         run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
+
 
   sign_and_verify_image:
     runs-on: ubuntu-latest
