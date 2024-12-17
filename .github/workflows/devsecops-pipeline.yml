@@ -290,10 +290,10 @@ jobs:
 
       - name: Verify Signed Docker Image using Digest
         run: |
-          echo "${{ secrets.COSIGN_PUBLIC_KEY }}" > cosign.pub
+          echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
           cosign verify --key cosign.pub $IMAGE_DIGEST
         env:
-          COSIGN_PUBLIC_KEY: ${{ secrets.COSIGN_PUBLIC_KEY }}
+          COSIGN_PUB: ${{ secrets.COSIGN_PUB }}
           IMAGE_DIGEST: ${{ env.IMAGE_DIGEST }}
 
       - name: Cleanup
