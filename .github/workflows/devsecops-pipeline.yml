@@ -85,7 +85,9 @@ jobs:
           cat coverage.xml || echo "Coverage file not found!"
 
       - name: List directory contents
-        run: ls -la
+        run: |
+          ls -la
+          pwd
 
       - name: Run SonarCloud Analysis
         uses: sonarsource/sonarcloud-github-action@v2
