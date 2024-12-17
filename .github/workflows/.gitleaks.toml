@@ -21,3 +21,9 @@ description = "Potential sensitive information-2"
 id = "sensitive-info-2"
 regex = '''(?i)api[_-]?key|secret|password'''
 tags = ["high_severity"]
+
+[[rules]]
+description = "Potential sensitive information-3"
+id = "sensitive-info-3"
+regex = '''(?i)(api[_-]?key)\s*=\s*["']?[A-Za-z0-9\-_]+["']?'''
+tags = ["high_severity"]
