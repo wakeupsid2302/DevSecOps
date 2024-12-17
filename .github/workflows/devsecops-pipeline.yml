@@ -150,8 +150,6 @@ jobs:
             "data.docker.policy.deny" > policy-evaluation.txt || true
           cat policy-evaluation.txt
 
-
-
   vulnerability_scan:
     runs-on: ubuntu-latest
     needs: validate_dockerfile
