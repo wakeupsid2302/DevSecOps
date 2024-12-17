@@ -278,8 +278,8 @@ jobs:
         id: extract_image_digest
         run: |
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' sidwar/devsecops-demo:${{ github.sha }})
-          echo "::set-output name=digest::$DIGEST"
-        
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
       - name: Sign Docker Image
         run: |
           echo "${{ secrets.COSIGN_KEY }}" > cosign.key
