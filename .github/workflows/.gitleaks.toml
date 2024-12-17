@@ -15,3 +15,9 @@ description = "Text file containing potential secrets"
 id = "secrets-file"
 file = '''secrets.txt'''
 tags = ["medium_severity"]
+
+[[rules]]
+description = "Potential sensitive information-2"
+id = "sensitive-info"
+regex = '''(?i)api[_-]?key|secret|password'''
+tags = ["high_severity"]
