@@ -58,21 +58,13 @@ jobs:
     needs: devsecops-demo
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Check repo files
-        run: |
-          git status
-          ls -R
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v1
-        with:
-          config-path: .github/workflows/.gitleaks.toml
-          args: --verbose --redact --repo=${{ github.repository }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Run GitLeaks Secret Scan
+      uses: zricethezav/gitleaks-action@v3
+      with:
+        args: --no-banner --path=. --report-format=json --report-path=gitleaks-report.json
 
   sonar_scan:
     runs-on: ubuntu-latest
