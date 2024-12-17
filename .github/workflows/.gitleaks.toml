@@ -1,6 +1,5 @@
 [rules]
-  [[rules.finding]]
-  description = "API Key Detection"
-  regex = "([0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]+-[A-Za-z0-9]+)"
-  tags = ["API_KEY"]
-
+[[rules.finding]]
+description = "API Key Detection"
+regex = "([0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]+-[A-Za-z0-9]+)"
+tags = ["API_KEY"]
