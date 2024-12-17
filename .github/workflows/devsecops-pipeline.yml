@@ -164,7 +164,7 @@ jobs:
 
       - name: Run Trivy Scan on Docker Image
         run: |
-          chmod -R 777 $(pwd) # Ensure directory write permissions
+          chmod -R 777 $(pwd) 
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $(pwd)/trivy-cache:/root/.cache/ \
