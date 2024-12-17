@@ -17,3 +17,6 @@ def get_data_processor():
 if __name__ == "__main__":
     processor = get_data_processor()
     print(processor.process_data())
+
+api_key = "12345-ABCDE-SECRET-KEY"
+print(api_key)
