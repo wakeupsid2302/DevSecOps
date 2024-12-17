@@ -268,6 +268,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Pull Docker Image
+        run: docker pull sidwar/devsecops-demo:${{ github.sha }}
+
       - name: Extract Image Digest
         run: |
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' sidwar/devsecops-demo:${{ github.sha }})
@@ -282,6 +285,7 @@ jobs:
 
       - name: Cleanup
         run: rm -f cosign.key
+
 
   verify_image:
     runs-on: ubuntu-latest
