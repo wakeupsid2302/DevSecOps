@@ -71,6 +71,8 @@ jobs:
         with:
           config-path: .github/workflows/.gitleaks.toml
           args: --verbose --redact --repo=${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   sonar_scan:
     runs-on: ubuntu-latest
