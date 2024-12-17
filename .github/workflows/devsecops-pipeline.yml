@@ -285,7 +285,8 @@ jobs:
           IMAGE_DIGEST: ${{ env.IMAGE_DIGEST }}
 
       - name: Print Signed Image Digest
-        run: echo "Signed image digest: $IMAGE_DIGEST"
+        run: |
+          echo "Signed image digest: $IMAGE_DIGEST"
 
       - name: Verify Signed Docker Image using Digest
         run: |
