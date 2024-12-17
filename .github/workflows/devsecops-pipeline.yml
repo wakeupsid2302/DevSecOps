@@ -297,6 +297,13 @@ jobs:
           chmod +x cosign
           sudo mv cosign /usr/local/bin/
 
+      - name: Print Image Digest
+        run: echo "IMAGE_DIGEST: ${{ needs.sign_image.outputs.IMAGE_DIGEST }}"
+
+      - name: Print COSIGN_PUBLIC_KEY
+        run: echo "COSIGN_PUBLIC_KEY: ${{ secrets.COSIGN_PUBLIC_KEY }}"
+
+
       - name: Verify Signed Docker Image using Digest
         run: |
           echo "${{ secrets.COSIGN_PUBLIC_KEY }}" > cosign.pub
