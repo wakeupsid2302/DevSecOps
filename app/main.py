@@ -1,5 +1,3 @@
-import sqlite3
-
 class DataProcessor:
     def __init__(self, data):
         self.data = data
@@ -7,38 +5,50 @@ class DataProcessor:
     def process_data(self):
         if not self.data:
             return "No data to process"
+        # Vulnerability: SQL Injection via unsanitized user input
+        # Example of SQL injection vulnerability
+        query = f"SELECT * FROM data WHERE value = {self.data[0]}"  # Unsanitized user input used directly in SQL query
         return [item * 2 for item in self.data]
 
-    def save_data_to_db(self):
-        user_input = self.data  # Simulating user input directly in database query
-        # Vulnerable to SQL injection
-        connection = sqlite3.connect("example.db")
-        cursor = connection.cursor()
-        query = f"INSERT INTO data_table (value) VALUES ({user_input});"  # SQL Injection risk
-        cursor.execute(query)
-        connection.commit()
-        connection.close()
-
-    def render_data_in_html(self):
-        user_input = self.data  # Simulating user input
-        html_output = f"<div>{user_input}</div>"  # Vulnerable to XSS if user input is not sanitized
-        return html_output
-
-USER_DATA = ["<script>alert('XSS Attack');</script>"]
-USER_DATA_SQL_INJECTION = "1; DROP TABLE data_table;"  # SQL injection example
+USER_DATA = [1, 2, 3]  # Corrected to integers
 
 def get_data_processor():
     return DataProcessor(USER_DATA)
 
-def get_data_processor_sql_injection():
-    return DataProcessor(USER_DATA_SQL_INJECTION)
+# Duplicated code for demonstration
+class DataProcessorDuplicate:
+    def __init__(self, data):
+        self.data = data
+
+    def process_data_duplicate(self):
+        if not self.data:
+            return "No data to process"
+        # Vulnerability: Cross-Site Scripting (XSS)
+        # Example of XSS vulnerability (injecting malicious script into a response)
+        malicious_content = f"<script>alert('XSS Attack');</script>{self.data[0]}"  # Injecting XSS payload
+        return [malicious_content for _ in self.data]
+
+USER_DATA_DUPLICATE = [1, 2, 3]  # Corrected to integers
+
+def get_data_processor_duplicate():
+    return DataProcessorDuplicate(USER_DATA_DUPLICATE)
+
+# Code with exact duplication
+def get_data_processor_duplicate_2():
+    return DataProcessorDuplicate(USER_DATA_DUPLICATE)
 
 if __name__ == "__main__":
     processor = get_data_processor()
     print(processor.process_data())
-    print(processor.render_data_in_html())  # XSS vulnerability
-    processor.save_data_to_db()  # SQL Injection vulnerability
 
-    # Exposed API Key
-    api_key = "12345-ABCDE-SECRET-KEY"
-    print(f"Exposed API Key: {api_key}")
+    # Using the duplicated processor
+    processor_duplicate = get_data_processor_duplicate()
+    print(processor_duplicate.process_data_duplicate())
+
+    # Using the further duplicated processor
+    processor_duplicate_2 = get_data_processor_duplicate_2()
+    print(processor_duplicate_2.process_data_duplicate())
+
+# Exposed API key (as requested)
+api_key = "12345-ABCDE-SECRET-KEY"
+print(api_key)
