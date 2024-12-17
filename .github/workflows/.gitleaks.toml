@@ -18,6 +18,6 @@ tags = ["medium_severity"]
 
 [[rules]]
 description = "Potential sensitive information-2"
-id = "sensitive-info"
+id = "sensitive-info-2"
 regex = '''(?i)api[_-]?key|secret|password'''
 tags = ["high_severity"]
