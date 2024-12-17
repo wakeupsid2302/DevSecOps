@@ -237,8 +237,8 @@ jobs:
       - name: Install Docker Slim
         run: |
           curl -sL https://github.com/docker-slim/docker-slim/releases/download/1.20/dist_linux.tar.gz -o docker-slim.tar.gz
-          tar -xzf docker-slim.tar.gz || { echo "Failed to extract Docker Slim. Exiting."; exit 1; }
-          sudo mv dist_linux/docker-slim /usr/local/bin/ || { echo "Failed to move Docker Slim binary. Exiting."; exit 1; }
+          tar -xzf docker-slim.tar.gz
+          sudo mv dist_linux/docker-slim /usr/local/bin/
           sudo chmod +x /usr/local/bin/docker-slim
           rm -rf dist_linux docker-slim.tar.gz
 
@@ -248,7 +248,7 @@ jobs:
       - name: Optimize Docker Image
         run: |
           docker-slim build \
-            --verbose \
+            --http-probe=false \
             --tag sidwar/devsecops-demo:slim-${{ github.sha }} \
             sidwar/devsecops-demo:${{ github.sha }}
 
@@ -260,7 +260,6 @@ jobs:
 
       - name: Push Slimmed Docker Image
         run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
-
 
 
   sign_and_verify_image:
