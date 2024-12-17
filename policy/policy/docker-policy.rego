@@ -10,6 +10,7 @@ deny[msg] {
 # Deny usage of ADD
 deny[msg] {
     input.instruction == "ADD"
+    input.value == "http ."
     msg = "Dockerfile must use COPY instead of ADD for improved security."
 }
 
