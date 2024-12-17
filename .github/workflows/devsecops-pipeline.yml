@@ -294,5 +294,8 @@ jobs:
     steps:
       - name: Verify Signed Docker Image
         run: |
-          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
-          cosign verify --key cosign.key sidwar/devsecops-demo:${{ github.sha }}
+          echo "${{ secrets.COSIGN_PUBLIC_KEY }}" > cosign.pub
+          cosign verify --key cosign.pub sidwar/devsecops-demo:${{ github.sha }}
+        env:
+          COSIGN_PUBLIC_KEY: ${{ secrets.COSIGN_PUBLIC_KEY }}
+
