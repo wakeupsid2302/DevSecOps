@@ -125,14 +125,9 @@ jobs:
 
       - name: Validate Dockerfile
         run: |
-          # Ensure the 'policy' directory exists
-          mkdir -p policy
-
-          # Run the policy evaluation with the pre-existing policy file
+          ls -la
           opa eval --input Dockerfile --data policy/docker.rego --format pretty \
             "data.docker.policy.deny" > policy-evaluation.txt || true
-
-          # Output the result
           cat policy-evaluation.txt
 
   vulnerability_scan:
