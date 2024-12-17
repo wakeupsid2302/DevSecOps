@@ -137,18 +137,17 @@ jobs:
 
       - name: Run Trivy Scan on Docker Image
         run: |
+          chmod -R 777 $(pwd) # Ensure directory write permissions
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $(pwd)/trivy-cache:/root/.cache/ \
-            aquasec/trivy:latest image --scanners vuln \
+            -v $(pwd):/app \
+            aquasec/trivy:latest image \
+            --scanners vuln \
             --format json \
-            --output trivy-report.json \
+            --output /app/trivy-report.json \
             sidwar/devsecops-demo:${{ github.sha }}
-        env:
-          DOCKER_BUILDKIT: 1
-
-      - name: Check Trivy Report
-        run: |
+          
           if [ ! -f trivy-report.json ]; then
             echo "Trivy report not generated. Debugging output:"
             docker images
