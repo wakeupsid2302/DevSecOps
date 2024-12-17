@@ -30,7 +30,7 @@ jobs:
       - name: Run Tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)/app
-          pytest app/test.py --cov=app --cov-report=xml:coverage.xml --maxfail=1 -v
+          pytest app/test.py --cov=app --cov-report=xml:$(pwd)/coverage.xml --maxfail=1 -v
 
       - name: Install Docker (latest version)
         run: |
@@ -84,8 +84,10 @@ jobs:
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.python.coverage.reportPaths=coverage.xml 
             -Dsonar.sources=app
+            -Dsonar.tests=app
+            -Dsonar.test.inclusions=**/test*.py
+            -Dsonar.python.coverage.reportPaths=coverage.xml
             -X
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
