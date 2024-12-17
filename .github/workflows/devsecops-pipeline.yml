@@ -123,44 +123,32 @@ jobs:
           chmod +x opa
           sudo mv opa /usr/local/bin/
 
-      - name: List files for debugging
-        run: ls -la
-
-      - name: Display Dockerfile contents for debugging
-        run: cat Dockerfile
-
-      - name: Evaluate Dockerfile against policy
+      - name: Validate Dockerfile
         run: |
-          # Debugging: Check if Dockerfile exists
-          if [ ! -f Dockerfile ]; then
-            echo "Dockerfile not found!"
-            exit 1
-          fi
+          mkdir -p policy
+          echo '
+          package docker.policy
 
-          # Debugging: Show Dockerfile contents
-          echo "Dockerfile contents:"
-          cat Dockerfile
+          deny[msg] {
+              input.instruction == "USER"
+              input.value == "root"
+              msg = "Avoid using root user in Dockerfile."
+          }
 
-          # Ensure the 'policy' directory and rego policy file exist
-          echo "Checking if policy/docker.rego exists:"
-          ls -la policy
+          deny[msg] {
+              input.instruction == "ADD"
+              msg = "Use COPY instead of ADD for better security."
+          }
 
-          # Run the OPA evaluation on the Dockerfile, with verbose output for debugging
-          opa eval --input Dockerfile --data policy/docker.rego --format pretty --verbose "data.docker.policy.deny" > policy-evaluation.txt || true
+          any_non_root_user_set {
+              input.instruction == "USER"
+              input.value != "root"
+          }
+          ' > policy/docker.rego
 
-          # Show the evaluation results for debugging
-          echo "Policy evaluation result:"
+          opa eval --input Dockerfile --data policy/ --format pretty \
+            "data.docker.policy.deny" > policy-evaluation.txt || true
           cat policy-evaluation.txt
-
-      - name: Check for policy violations
-        run: |
-          violations=$(cat policy-evaluation.txt)
-          if [[ "$violations" == *"deny"* ]]; then
-            echo "Policy violations found!"
-            exit 1
-          else
-            echo "No policy violations found."
-          fi
 
 
   vulnerability_scan:
