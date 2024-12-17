@@ -59,13 +59,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Run Gitleaks scan
+      - name: Check repo files
+        run: |
+          git status
+          ls -R
+
+      - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v1
         with:
-          config-path: ".github/workflows/.gitleaks.toml"  
-          args: "--verbose --redact"  
+          config-path: .github/workflows/.gitleaks.toml
+          args: --verbose --redact --repo=${{ github.repository }}
 
   sonar_scan:
     runs-on: ubuntu-latest
