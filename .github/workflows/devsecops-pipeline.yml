@@ -64,8 +64,8 @@ jobs:
       - name: Run Gitleaks scan
         uses: gitleaks/gitleaks-action@v1
         with:
-          config: .gitleaks.toml 
-          fail_on_commit: true   
+          config-path: ".github/workflows/.gitleaks.toml"  
+          args: "--verbose --redact"  
 
   sonar_scan:
     runs-on: ubuntu-latest

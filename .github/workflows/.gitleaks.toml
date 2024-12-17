@@ -1,0 +1,5 @@
+[rules]
+  [[rules.finding]]
+  description = "Custom API Key"
+  regex = "([A-Za-z0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]{5})"  # Match your API key format
+  tags = ["API_KEY"]
