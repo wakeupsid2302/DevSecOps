@@ -237,7 +237,7 @@ jobs:
         run: docker pull sidwar/devsecops-demo:${{ github.sha }}
 
       - name: Optimize Docker Image with Docker Slim
-        uses: docker-slim/docker-slim-action@v5
+        uses: docker-slim/docker-slim-action@v1
         with:
           target: sidwar/devsecops-demo:${{ github.sha }}
           tag: sidwar/devsecops-demo:slim-${{ github.sha }}
