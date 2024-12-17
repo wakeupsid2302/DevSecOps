@@ -149,6 +149,10 @@ jobs:
           opa eval --input Dockerfile --data policy/ --format pretty \
             "data.docker.policy.deny" > policy-evaluation.txt || true
           cat policy-evaluation.txt
+      - name: Debug Policies
+        run: |
+          echo "Checking for other policies..."
+          find . -name "*.rego"
 
   vulnerability_scan:
     runs-on: ubuntu-latest
