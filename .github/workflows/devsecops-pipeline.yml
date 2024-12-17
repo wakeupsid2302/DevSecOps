@@ -234,26 +234,13 @@ jobs:
       - name: Pull Docker Image
         run: docker pull sidwar/devsecops-demo:${{ github.sha }}
 
-      - name: Install Docker Slim
-        run: |
-          curl -sL https://github.com/docker-slim/docker-slim/releases/download/1.20/dist_linux.tar.gz -o docker-slim.tar.gz
-          tar -xzf docker-slim.tar.gz
-          sudo mv dist_linux/docker-slim /usr/local/bin/
-          sudo chmod +x /usr/local/bin/docker-slim
-          rm -rf dist_linux docker-slim.tar.gz
+      - name: Pull Docker Slim Image
+        run: docker pull docker-slim/docker-slim:1.20
 
-      - name: Debugging Docker Slim Installation
+      - name: Optimize Docker Image using Docker Slim
         run: |
-          echo "Inspecting /opt/dockerslim..."
-          if [ -d "/opt/dockerslim" ]; then
-            ls -lR /opt/dockerslim
-          else
-            echo "/opt/dockerslim directory does not exist"
-          fi
-
-      - name: Optimize Docker Image
-        run: |
-          TMPDIR=/tmp docker-slim build \
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $(pwd):/tmp docker-slim/docker-slim:1.20 build \
             --http-probe=false \
             --tag sidwar/devsecops-demo:slim-${{ github.sha }} \
             sidwar/devsecops-demo:${{ github.sha }}
@@ -266,7 +253,6 @@ jobs:
 
       - name: Push Slimmed Docker Image
         run: docker push sidwar/devsecops-demo:slim-${{ github.sha }}
-
 
   sign_and_verify_image:
     runs-on: ubuntu-latest
