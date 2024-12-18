@@ -13,7 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8080
 
-# Switch to non-root user
 USER root
 
 # Copy application files
